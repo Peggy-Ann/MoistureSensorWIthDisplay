@@ -1,0 +1,78 @@
+esphome:
+  name: moisture
+  platform: ESP8266
+  board: nodemcuv2
+
+packages:
+  wifi: !include wifi.yaml
+  mqtt: !include mqtt.yaml
+
+captive_portal:
+
+# Enable logging
+logger:
+
+# Enable Over The Air programing
+ota:
+
+sensor:
+  - platform: adc
+    pin: A0
+    id: paraplyaralia # Moist SensorID
+    name: "paraplyaralia" #Moist sensorname used in MQTT 
+    update_interval: 10s #How often should the moisture be read
+    unit_of_measurement: "%" # Percent
+    accuracy_decimals: 0 # No decimals
+    filters:
+      - calibrate_linear: #Set low voltage to high moisture, and high voltage to low moisture. These values should be calibrated to your plant, diffrent solis get diffrent values.
+        - 0.32 -> 100 #Wet
+        - 0.59 -> 0 #Dry
+
+# display configuration entry
+i2c:
+  sda: D1
+  scl: D2
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    reset_pin: D0
+    address: 0x3C
+    id: my_display
+    
+    pages: #Status pages showing on display rotated to be vertical. 
+      - id: page1 #Page1 showing smilies depending on humidity in soil, More than 65%=happy,between 65 and 30=Neutral, below 30=sad
+        lambda: |-
+          it.set_rotation(DISPLAY_ROTATION_270_DEGREES);
+          if (id(paraplyaralia).state>65) { 
+            it.print(32, 34, id(icon_font), TextAlign::TOP_CENTER, "󰇵");
+          } else if(id(paraplyaralia).state<30) {
+            it.print(32, 34, id(icon_font), TextAlign::TOP_CENTER, "󰇸");
+          } else {
+            it.print(32, 34, id(icon_font), TextAlign::TOP_CENTER, "󰇶");
+          }
+      - id: page2 #Page2 showing percentage of soilhumidity
+        lambda: |-
+          it.printf(0, 64, id(cg), TextAlign::CENTER_VERTICAL, "%.0f%%", id(paraplyaralia).state);
+      - id: page3 #Page3 shoving a filled rectangle based on soilhumidity(sinking waterlevel)
+        lambda: |-
+          it.filled_rectangle(0, 128-(128*(id(paraplyaralia).state/100)), 64, 128);
+
+interval:
+  - interval: 3s
+    then:
+      - display.page.show_next: my_display
+      - component.update: my_display       
+
+font:
+  - file: "fonts/century-gothic.ttf"
+    id: cg
+    size: 30
+  - file: "fonts/materialdesignicons-webfont.ttf"
+    id: icon_font
+    size: 60
+    glyphs: [
+      '󰇵', #Happy
+      '󰇸', #Sad
+      '󰇶', #Normal
+    ]

@@ -1,0 +1,12 @@
+mqtt:
+  broker: 192.168.xxx.xxx # Enter IP adress of MQTT broker
+  username: username # MQTT Username for this device
+  password: password # MQTT Password for this device
+  discovery: false
+  topic_prefix: esphome/moisture
+  birth_message:
+    topic: esphome/moisture/sensor/paraplyaralia/online
+    payload: "true"
+  will_message:
+    topic: esphome/moisture/sensor/paraplyaralia/online
+    payload: "false"

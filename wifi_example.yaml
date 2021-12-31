@@ -1,0 +1,8 @@
+wifi:
+  ssid: "SSID" # Enter SSID here
+  password: password # Enter password for WiFi here
+  fast_connect: true
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Fallback Hotspot" # Change to whatever SSI you like for backup wifi from sensor
+    password: "password" # Change to the password you would like to set.
